@@ -9,7 +9,6 @@ jobs:
     #strategy:
     #  matrix:
     #    dotnet-version: ['3.0', '3.1.x', '5.0.x' ]
-
     steps:
       - name: Set up JDK 11
         uses: actions/setup-java@v1
@@ -26,11 +25,30 @@ jobs:
       #   run: dotnet build --configuration Release --no-restore
       # - name: Test
       #   run: dotnet test --no-restore --verbosity normal
-      - name: Prepare Building
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~\sonar\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v1
+        with:
+          path: .\.sonar\scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: |
+          dotnet tool install dotnet-sonarscanner --tool-path .\.sonar\scanner
+      - name: Install OpenCover
+        run: nuget install OpenCover -OutputDirectory ".\.dotcover"
+      - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1 
       - name: Restore NuGet
         run: nuget restore
-      - name: Building     
+      - name: Build  
         run: msbuild.exe AutomationScript.sln /clp:ErrorsOnly /fileLogger /flp:errorsonly /nologo /t:Clean,Restore,Build /p:Configuration=Release /p:ReferencePath="${{ github.workspace }}\Dlls" # /verbosity:minimal
       # dotnet tool install --global dotnet-sonarscanner
       #- name: Install Dotnet coverage
@@ -54,52 +72,17 @@ jobs:
         # dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
       #- name: readDir2
       #  run: ls -lR 
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.2.2
-        with:
-          # Artifact name
-          name: buildresult #.zip will be added automatically
-          path: coverage.xml
-          #path: /home/runner/work/testing/testing/ClassLibrary/bin/Release/net462/*.*
-  unitTests:
-    runs-on: windows-latest
-    needs: build
-    steps:
-      - name: list content
-        run: dir /s
-        shell: cmd
+      # - name: list content
+      #   run: dir /s
+      #   shell: cmd
       - name: Scan Test Projects
         run: echo "todo"
       - name: Prepare Unit Tests
         uses: darenm/Setup-VSTest@v1
       - name: Unit Tests
         run: vstest.console.exe **\bin\**\*.UnitTests.dll **\bin\**\*.Tests.dll **\bin\**\*Tests.dll /logger:trx # https://learn.microsoft.com/en-us/visualstudio/test/vstest-console-options?view=vs-2022
-  sonarCloudAnalisys:
-    runs-on: windows-latest
-    needs: build
-    steps:
-      - name: Prepare Building
-        uses: microsoft/setup-msbuild@v1 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v1
-        with:
-          path: ~\sonar\cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: Cache SonarCloud scanner
-        id: cache-sonar-scanner
-        uses: actions/cache@v1
-        with:
-          path: .\.sonar\scanner
-          key: ${{ runner.os }}-sonar-scanner
-          restore-keys: ${{ runner.os }}-sonar-scanner
-      - name: Install SonarCloud scanner
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-        run: |
-          dotnet tool install dotnet-sonarscanner --tool-path .\.sonar\scanner
-      - name: Install OpenCover
-        run: nuget install OpenCover -OutputDirectory ".\.dotcover"
-      - name: Build and analyze
+        continue-on-error: true
+      - name: Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -108,3 +91,22 @@ jobs:
             msbuild.exe AutomationScript.sln /clp:ErrorsOnly /fileLogger /flp:errorsonly /nologo /t:Clean,Restore,Build /p:Configuration=Release /p:ReferencePath="${{ github.workspace }}\Dlls"
             & .\.dotcover\OpenCover.4.7.1221\tools\OpenCover.Console.exe -target:"vstest.console.exe" -targetargs:"**\bin\**\*Tests.dll" -returntargetcode -output:coverage.xml -register:user
             .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        continue-on-error: true
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        # Force to fail step after specific time.
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          #SONAR_HOST_URL: "https://sonarcloud.io" #OPTIONAL
+      - name: Example show SonarQube Quality Gate Status value
+        run: echo "The Quality Gate status is ${{ steps.analyze.outputs.quality-gate-status }}"
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          # Artifact name
+          name: buildresult #.zip will be added automatically
+          path: coverage.xml
+          #path: /home/runner/work/testing/testing/ClassLibrary/bin/Release/net462/*.*
+      
