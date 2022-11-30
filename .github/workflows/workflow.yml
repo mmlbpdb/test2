@@ -72,9 +72,6 @@ jobs:
         # dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
       #- name: readDir2
       #  run: ls -lR 
-      # - name: list content
-      #   run: dir /s
-      #   shell: cmd
       - name: Scan Test Projects
         run: echo "todo"
       - name: Prepare Unit Tests
@@ -92,9 +89,14 @@ jobs:
             & .\.dotcover\OpenCover.4.7.1221\tools\OpenCover.Console.exe -target:"vstest.console.exe" -targetargs:"**\bin\**\*Tests.dll" -returntargetcode -output:coverage.xml -register:user
             .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
         continue-on-error: true
+      - name: list content
+        run: dir /s
+        shell: cmd
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@master
+        with:
+          scanMetadataReportFile: .sonarqube/out/.sonar/report-task.txt
         # Force to fail step after specific time.
         timeout-minutes: 5
         env:
