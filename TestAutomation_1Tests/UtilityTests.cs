@@ -14,7 +14,7 @@
 
 
 			// Assert
-			Assert.AreEqual("A", output);
+			Assert.AreEqual("B", output);
 		}
 	}
 }
