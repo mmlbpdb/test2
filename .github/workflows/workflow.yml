@@ -107,16 +107,24 @@ jobs:
         run: echo "The Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"
       - name: Quality Gate
         run: |
-          SET Result=0
-          IF "${{ steps.unit-tests.outcome }}" == "failure" SET Result=1
-          IF "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" ==  "FAILED" SET Result=1
-          IF %Result% EQU 1 (
-          ECHO "Quality gate failed"
-          EXIT 1
-          ) ELSE (
-          ECHO "Quality gate passed"
-          )
-        shell: cmd
+          if "${{ steps.unit-tests.outcome }}" == "failure" or "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" == "FAILED":
+          print("Quality gate failed due to:")
+          if "${{ steps.unit-tests.outcome }}" == "failure":
+            print("- Test failures")
+          if "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" == "FAILED":
+            print("- Code analysis quality gate failed")
+        shell: python
+        # run: |
+        #   SET Result=0
+        #   IF "${{ steps.unit-tests.outcome }}" == "failure" SET Result=1
+        #   IF "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" ==  "FAILED" SET Result=1
+        #   IF %Result% EQU 1 (
+        #   ECHO "Quality gate failed"
+        #   EXIT 1
+        #   ) ELSE (
+        #   ECHO "Quality gate passed"
+        #   )
+        # shell: cmd
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.2.2
         with:
