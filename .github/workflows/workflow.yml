@@ -79,7 +79,7 @@ jobs:
       - name: Unit Tests
         id: unit-tests
         #run: vstest.console.exe **\bin\**\*.UnitTests.dll **\bin\**\*.Tests.dll **\bin\**\*Tests.dll /logger:trx # https://learn.microsoft.com/en-us/visualstudio/test/vstest-console-options?view=vs-2022
-        run: .\.dotcover\OpenCover.4.7.1221\tools\OpenCover.Console.exe -target:"vstest.console.exe" -targetargs:"**\bin\**\*Tests.dll" -returntargetcode -output:coverage.xml -register:user
+        run: .\.dotcover\OpenCover.4.7.1221\tools\OpenCover.Console.exe -target:"vstest.console.exe" -targetargs:"**\bin\**\*Tests.dll" -returntargetcode -output:coverage.xml -register:Path32
         continue-on-error: true
       - name: list content
         run: dir /s

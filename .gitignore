@@ -1,3 +1,4 @@
+
 **/bin/*
 **/obj/*
 .vs/*
@@ -15,3 +16,4 @@ _git2_*
 **/*.csproj.user
 # resharper solution user settings
 *sln.DotSettings.user
+OpenCover.4.7.1221/*
