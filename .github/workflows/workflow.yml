@@ -108,7 +108,7 @@ jobs:
       - name: Quality Gate
         run: |
           if "${{ steps.unit-tests.outcome }}" == "failure" or "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" == "FAILED":
-          print("Quality gate failed due to:")
+            print("Quality gate failed due to:")
           if "${{ steps.unit-tests.outcome }}" == "failure":
             print("- Test failures")
           if "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" == "FAILED":
