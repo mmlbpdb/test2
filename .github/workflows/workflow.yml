@@ -77,6 +77,7 @@ jobs:
       - name: Prepare Unit Tests
         uses: darenm/Setup-VSTest@v1
       - name: Unit Tests
+        id: unit-tests
         run: vstest.console.exe **\bin\**\*.UnitTests.dll **\bin\**\*.Tests.dll **\bin\**\*Tests.dll /logger:trx # https://learn.microsoft.com/en-us/visualstudio/test/vstest-console-options?view=vs-2022
         continue-on-error: true
       - name: Analyze
@@ -103,7 +104,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           #SONAR_HOST_URL: "https://sonarcloud.io" #OPTIONAL
       - name: Example show SonarQube Quality Gate Status value
-        run: echo "The Quality Gate status is ${{ steps.analyze.outputs.quality-gate-status }}"
+        run: echo "The Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"
+      - name: Quality Gate
+        run: exit (${{ steps.unit-tests.outcome }} == 'failure' || ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }} == 'FAILED')
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.2.2
         with:
