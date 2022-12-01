@@ -106,7 +106,7 @@ jobs:
       - name: Example show SonarQube Quality Gate Status value
         run: echo "The Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"
       - name: Quality Gate
-        run: exit (${{ steps.unit-tests.outcome }} == 'failure' || ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }} == 'FAILED')
+        run: exit ("${{ steps.unit-tests.outcome }}" == "failure" || "${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}" == "FAILED")
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.2.2
         with:
