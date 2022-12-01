@@ -81,6 +81,9 @@ jobs:
         #run: vstest.console.exe **\bin\**\*.UnitTests.dll **\bin\**\*.Tests.dll **\bin\**\*Tests.dll /logger:trx # https://learn.microsoft.com/en-us/visualstudio/test/vstest-console-options?view=vs-2022
         run: .\.dotcover\OpenCover.4.7.1221\tools\OpenCover.Console.exe -target:"vstest.console.exe" -targetargs:"**\bin\**\*Tests.dll" -returntargetcode -output:coverage.xml -register:user
         continue-on-error: true
+      - name: list content
+        run: dir /s
+        shell: cmd
       - name: Analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
@@ -91,9 +94,6 @@ jobs:
             .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
         continue-on-error: true
       # & .\.dotcover\OpenCover.4.7.1221\tools\OpenCover.Console.exe -target:"vstest.console.exe" -targetargs:"**\bin\**\*Tests.dll" -returntargetcode -output:coverage.xml -register:user
-      # - name: list content
-      #   run: dir /s
-      #   shell: cmd
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@master
